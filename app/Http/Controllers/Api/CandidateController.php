@@ -10,6 +10,7 @@ use App\Http\Resources\Api\CandidateResource;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request;
 
 class CandidateController extends Controller
 {
@@ -24,14 +25,43 @@ class CandidateController extends Controller
     /**
      * عرض قائمة المترشحين
      */
-    public function index(): AnonymousResourceCollection
-    {
-        // جلب المترشحين مع صورهم إن وجدت، مع الترتيب والتصفح
-        $candidates = Candidate::with('image')->latest()->paginate(15);
 
-        return CandidateResource::collection($candidates);
+public function index(Request $request): AnonymousResourceCollection
+{
+    // 1. نبدأ بإنشاء الاستعلام مع شحن الصور
+    $query = Candidate::query()->with('image');
+
+    // 2. فلتر البحث العام (الاسم، الرقم الوطني، الهاتف)
+    $query->when($request->search, function ($q, $search) {
+        $q->where(function ($sq) use ($search) {
+            $sq->where('Name', 'like', "%{$search}%")
+               ->orWhere('NationalNo', 'like', "%{$search}%")
+               ->orWhere('Phone', 'like', "%{$search}%");
+        });
+    });
+
+    // 3. فلتر السكن (بحث جزئي)
+    $query->when($request->Residence, function ($q, $residence) {
+        $q->where('Residence', 'like', "%{$residence}%");
+    });
+
+    // 4. فلتر المقاس (مطابقة تامة)
+    $query->when($request->Size, function ($q, $size) {
+        $q->where('Size', $size);
+    });
+
+    // 5. فلتر حالة اللياقة
+    // نستخدم has لنتأكد أن القيمة أُرسلت فعلاً (لأنها قد تكون 0)
+    if ($request->has('IsFit') && $request->IsFit !== '') {
+        $query->where('IsFit', (bool)$request->IsFit);
     }
 
+    // 6. الترتيب والجلب مع التصفح
+    // نستخدم appends لضمان بقاء الفلاتر فعالة عند التنقل بين الصفحات
+    $candidates = $query->latest()->paginate(15)->appends($request->query());
+
+    return CandidateResource::collection($candidates);
+}
     /**
      * إضافة مترشح جديد
      */
