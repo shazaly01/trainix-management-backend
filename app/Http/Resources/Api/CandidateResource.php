@@ -31,7 +31,7 @@ class CandidateResource extends JsonResource
             'Notes' => $this->Notes,
 
             // استدعاء ملف الـ Resource الخاص بالمرفقات لجلب بيانات ورابط الصورة الشخصية
-            'Image' => new DocumentResource($this->whenLoaded('image')),
+            'image_url' => $this->image ? asset('storage/' . $this->image) : null,
 
             'CreatedAt' => $this->created_at->format('Y-m-d H:i'),
             'UpdatedAt' => $this->updated_at->format('Y-m-d H:i'),
