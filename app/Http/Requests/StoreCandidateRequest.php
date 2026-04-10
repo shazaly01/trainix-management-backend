@@ -28,6 +28,8 @@ class StoreCandidateRequest extends FormRequest
             'Size' => ['nullable', 'string', 'max:50'],
             'IsFit' => ['boolean'],
             'Notes' => ['nullable', 'string'],
+            'BankName' => ['nullable', 'string', 'max:255'],
+        'BankAccountNo' => ['nullable', 'string', 'max:50'],
 
             // التحقق من الصورة المرفقة (اختيارية، ويجب أن تكون صورة بحجم أقصى 5 ميجا)
             'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],

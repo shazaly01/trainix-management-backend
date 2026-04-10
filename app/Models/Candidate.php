@@ -28,6 +28,8 @@ class Candidate extends Model
         'Size',
         'IsFit',
         'Notes',
+        'BankName',
+    'BankAccountNo',
     ];
 
     protected $casts = [

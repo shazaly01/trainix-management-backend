@@ -36,6 +36,8 @@ class UpdateCandidateRequest extends FormRequest
             'Size' => ['nullable', 'string', 'max:50'],
             'IsFit' => ['boolean'],
             'Notes' => ['nullable', 'string'],
+          'BankName' => ['nullable', 'string', 'max:255'],
+        'BankAccountNo' => ['nullable', 'string', 'max:50'],
 
            'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],
         ];

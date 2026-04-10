@@ -30,6 +30,8 @@ class CandidateResource extends JsonResource
             'Size' => $this->Size,
             'IsFit' => $this->IsFit,
             'Notes' => $this->Notes,
+            'BankName' => $this->BankName,
+            'BankAccountNo' => $this->BankAccountNo,
 
             // استدعاء ملف الـ Resource الخاص بالمرفقات لجلب بيانات ورابط الصورة الشخصية
             'image_url' => $this->image ? asset('storage/' . $this->image->file_path) : null,
