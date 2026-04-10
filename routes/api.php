@@ -22,6 +22,8 @@ use App\Http\Controllers\Api\ApplicationController;
 use App\Http\Controllers\Api\InterviewController;
 use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\CandidateController;
+use App\Http\Controllers\Api\PublicCandidateController; // <--- ✅ تمت إضافة المتحكم العام هنا
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -42,6 +44,17 @@ Route::post('/applicants', [ApplicantController::class, 'store']);
 Route::post('/documents', [DocumentController::class, 'store']); // <--- أضف هذا السطر هنا ✅
 Route::post('/applicants/resume', [ApplicantController::class, 'resumeApplication']);
 Route::get('job-requests/detail/{slug}', [JobRequestController::class, 'showBySlug']);
+
+// ==========================================
+// مسارات التقديم للمتدربين (عامة)
+// ==========================================
+// تقديم طلب دورة تدريبية جديد
+Route::post('/public/candidates/submit', [PublicCandidateController::class, 'submitApplication']);
+// متابعة/جلب بيانات طلب المتدرب باستخدام رقم التحقق
+Route::post('/public/candidates/verify', [PublicCandidateController::class, 'getApplicationByVerification']);
+
+Route::put('/public/candidates/update', [PublicCandidateController::class, 'updateApplication']);
+
 // ==========================================
 // 2. المسارات المحمية (Protected Routes - تتطلب Token)
 // ==========================================

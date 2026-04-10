@@ -68,4 +68,10 @@ class JobRequest extends Model
     {
         return $this->hasMany(Interview::class);
     }
+
+
+    public function candidates(): HasMany
+    {
+        return $this->hasMany(Candidate::class);
+    }
 }
