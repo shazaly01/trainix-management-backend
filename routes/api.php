@@ -23,7 +23,7 @@ use App\Http\Controllers\Api\InterviewController;
 use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\CandidateController;
 use App\Http\Controllers\Api\PublicCandidateController; // <--- ✅ تمت إضافة المتحكم العام هنا
-
+use App\Http\Controllers\Api\TrainingDashboardController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -67,7 +67,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // --- ب. الإحصائيات (Dashboard) ---
-    Route::get('/dashboard/stats', [DashboardController::class, 'index']);
+    Route::get('/training-dashboard', [TrainingDashboardController::class, 'index']);
 
     // --- ج. إدارة النظام (Users, Roles, Backups) ---
     Route::apiResource('users', UserController::class);
