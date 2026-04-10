@@ -7,56 +7,52 @@ use Illuminate\Database\Seeder;
 
 class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // 1. إنشاء مستخدم Super Admin
-        $superAdmin = User::create([
-            'full_name' => 'Super Admin',
-            'username' => 'superadmin', // username فريد
-            'email' => 'superadmin@app.com',
-            'password' => bcrypt('12345678'), // كلمة مرور موحدة لسهولة التطوير
-            'email_verified_at' => now(),
-        ]);
-        // تعيين دور "Super Admin" الصحيح
-        $superAdmin->assignRole('Super Admin');
+        // مصفوفة المستخدمين المطلوب وجودهم في النظام
+        $users = [
+            [
+                'full_name' => 'Super Admin',
+                'username'  => 'superadmin',
+                'email'     => 'superadmin@app.com',
+                'role'      => 'Super Admin'
+            ],
+            [
+                'full_name' => 'Admin User',
+                'username'  => 'admin',
+                'email'     => 'admin@app.com',
+                'role'      => 'Admin'
+            ],
+            [
+                'full_name' => 'Data Entry User',
+                'username'  => 'dataentry',
+                'email'     => 'dataentry@app.com',
+                'role'      => 'Data Entry'
+            ],
+            [
+                'full_name' => 'Auditor User',
+                'username'  => 'auditor',
+                'email'     => 'auditor@app.com',
+                'role'      => 'Auditor'
+            ],
+        ];
 
+        foreach ($users as $userData) {
+            // استخدام updateOrCreate يمنع تكرار الخطأ ويحدث البيانات إذا تغيرت
+            $user = User::updateOrCreate(
+                ['username' => $userData['username']], // حقل البحث (فريد)
+                [
+                    'full_name' => $userData['full_name'],
+                    'email'     => $userData['email'],
+                    'password'  => bcrypt('12345678'), // يمكنك تغييره لاحقاً
+                    'email_verified_at' => now(),
+                ]
+            );
 
-        // 2. إنشاء مستخدم Admin (مدير النظام)
-        $adminUser = User::create([
-            'full_name' => 'Admin User',
-            'username' => 'admin', // username فريد
-            'email' => 'admin@app.com',
-            'password' => bcrypt('12345678'),
-            'email_verified_at' => now(),
-        ]);
-        // تعيين دور "Admin" الصحيح
-        $adminUser->assignRole('Admin');
+            // إسناد الرتبة (syncRoles تحذف الرتب القديمة وتضع الجديدة فقط)
+            $user->syncRoles([$userData['role']]);
+        }
 
-
-        // 3. إنشاء مستخدم Data Entry (مدخل بيانات)
-        $dataEntryUser = User::create([
-            'full_name' => 'Data Entry User',
-            'username' => 'dataentry', // username فريد
-            'email' => 'dataentry@app.com',
-            'password' => bcrypt('12345678'),
-            'email_verified_at' => now(),
-        ]);
-        // تعيين دور "Data Entry" الصحيح
-        $dataEntryUser->assignRole('Data Entry');
-
-
-        // 4. إنشاء مستخدم Auditor (مراجع)
-        $auditorUser = User::create([
-            'full_name' => 'Auditor User',
-            'username' => 'auditor', // username فريد
-            'email' => 'auditor@app.com',
-            'password' => bcrypt('12345678'),
-            'email_verified_at' => now(),
-        ]);
-        // تعيين دور "Auditor" الصحيح
-        $auditorUser->assignRole('Auditor');
+        $this->command->info('✅ تم تحديث المستخدمين وإسناد الرتب الجديدة بنجاح.');
     }
 }
