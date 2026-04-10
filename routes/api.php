@@ -53,7 +53,7 @@ Route::post('/public/candidates/submit', [PublicCandidateController::class, 'sub
 // متابعة/جلب بيانات طلب المتدرب باستخدام رقم التحقق
 Route::post('/public/candidates/verify', [PublicCandidateController::class, 'getApplicationByVerification']);
 
-Route::put('/public/candidates/update', [PublicCandidateController::class, 'updateApplication']);
+Route::post('/update', [PublicCandidateController::class, 'updateApplication']);
 
 // ==========================================
 // 2. المسارات المحمية (Protected Routes - تتطلب Token)

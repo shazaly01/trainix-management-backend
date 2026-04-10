@@ -13,34 +13,19 @@ use Illuminate\Support\Facades\Storage;
 class PublicCandidateController extends Controller
 {
     /**
-     * مسار التقديم العام لدورة تدريبية
+     * مسار التقديم العام - إضافة مترشح جديد مع صورته
      */
     public function submitApplication(StoreCandidatePublicRequest $request): JsonResponse
     {
-        $data = $request->validated();
+        // 1. حفظ بيانات المترشح الأساسية
+        $candidate = Candidate::create($request->validated());
 
-        // 1. معالجة الصورة الشخصية
-        if ($request->hasFile('image')) {
-            // تخزين الصورة في مجلد candidates_images على قرص public
-            $path = $request->file('image')->store('candidates_images', 'public');
-            // حفظ المسار في حقل image_url الخاص بقاعدة البيانات
-            $data['image_url'] = $path;
-        }
-
-        // 2. توليد رقم تحقق (إذا لم يكن الموديل يقوم بذلك تلقائياً)
-        if (!isset($data['VerificationCode'])) {
-            $data['VerificationCode'] = (string) rand(100000, 999999);
-        }
-
-        // 3. توليد رقم تسلسلي (SequenceNo) إذا لزم الأمر
-        $data['SequenceNo'] = now()->format('ymd') . rand(100, 999);
-
-        // حفظ البيانات
-        $candidate = Candidate::create($data);
+        // 2. معالجة رفع الصورة الشخصية (بنفس منطق السيستم الداخلي)
+        $this->handlePublicImageUpload($request, $candidate);
 
         return response()->json([
             'status' => 'success',
-            'message' => 'تم استلام طلبك بنجاح. يرجى الاحتفاظ برقم التحقق لتتمكن من متابعة أو تعديل طلبك لاحقاً.',
+            'message' => 'تم استلام طلبك بنجاح. يرجى الاحتفاظ برقم التحقق.',
             'data' => [
                 'verification_code' => $candidate->VerificationCode,
                 'name' => $candidate->Name
@@ -49,7 +34,7 @@ class PublicCandidateController extends Controller
     }
 
     /**
-     * مسار جلب بيانات المتدرب (مع إضافة رابط الصورة الكامل)
+     * جلب بيانات المترشح (مع شحن علاقة الصورة)
      */
     public function getApplicationByVerification(Request $request): JsonResponse
     {
@@ -59,68 +44,74 @@ class PublicCandidateController extends Controller
             'verification_code' => 'required|string',
         ]);
 
-        $candidateQuery = Candidate::where('VerificationCode', $request->verification_code);
+        $query = Candidate::where('VerificationCode', $request->verification_code);
 
         if ($request->filled('passport_no')) {
-            $candidateQuery->where('PassportNo', $request->passport_no);
-        } elseif ($request->filled('national_no')) {
-            $candidateQuery->where('NationalNo', $request->national_no);
+            $query->where('PassportNo', $request->passport_no);
+        } else {
+            $query->where('NationalNo', $request->national_no);
         }
 
-        $candidate = $candidateQuery->with('jobRequest')->first();
+        // شحن علاقة الصورة (image) كما في الـ Index الخاص بك
+        $candidate = $query->with('image')->first();
 
         if (!$candidate) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'بيانات التحقق غير صحيحة، أو لا يوجد طلب بهذا الرقم.'
-            ], 404);
+            return response()->json(['status' => 'error', 'message' => 'البيانات غير صحيحة.'], 404);
         }
 
-        // تحويل مسار الصورة لرابط كامل ليظهر في Vue
-        if ($candidate->image_url) {
-            $candidate->image_url = asset('storage/' . $candidate->image_url);
+        // تجهيز رابط الصورة للـ Vue (إذا كانت العلاقة موجودة)
+        if ($candidate->image) {
+            $candidate->image_url = asset('storage/' . $candidate->image->file_path);
         }
+
+        return response()->json(['status' => 'success', 'data' => $candidate]);
+    }
+
+    /**
+     * تحديث بيانات المترشح وصورته
+     */
+    public function updateApplication(UpdateCandidatePublicRequest $request): JsonResponse
+    {
+        $candidate = Candidate::where('VerificationCode', $request->verification_code)->first();
+
+        if (!$candidate) {
+            return response()->json(['status' => 'error', 'message' => 'لا يمكن التعديل.'], 403);
+        }
+
+        // تحديث البيانات الأساسية
+        $candidate->update($request->validated());
+
+        // تحديث الصورة (حذف القديمة ورفع الجديدة)
+        $this->handlePublicImageUpload($request, $candidate);
 
         return response()->json([
             'status' => 'success',
-            'data' => $candidate
+            'message' => 'تم تحديث بياناتك بنجاح.',
+            'data' => $candidate->load('image')
         ]);
     }
 
     /**
-     * مسار تحديث بيانات المتدرب (مع معالجة استبدال الصورة)
+     * دالة مساعدة مطابقة تماماً للسيستم الداخلي الخاص بك
      */
-    public function updateApplication(UpdateCandidatePublicRequest $request): JsonResponse
+    private function handlePublicImageUpload($request, Candidate $candidate): void
     {
-        // البحث عن المترشح
-        $candidate = Candidate::where('VerificationCode', $request->verification_code)->first();
-
-        if (!$candidate) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'بيانات التحقق غير صحيحة، لا يمكنك التعديل.'
-            ], 403);
-        }
-
-        $dataToUpdate = $request->validated();
-
-        // معالجة تحديث الصورة
         if ($request->hasFile('image')) {
-            // حذف الصورة القديمة من السيرفر لتوفير المساحة
-            if ($candidate->image_url) {
-                Storage::disk('public')->delete($candidate->image_url);
+            // 1. حذف الصورة القديمة من التخزين وقاعدة البيانات (عبر العلاقة)
+            if ($candidate->image) {
+                Storage::disk('public')->delete($candidate->image->file_path);
+                $candidate->image()->delete();
             }
-            // رفع الصورة الجديدة
-            $dataToUpdate['image_url'] = $request->file('image')->store('candidates_images', 'public');
+
+            // 2. رفع الصورة الجديدة في نفس المسار المعتمد عندك
+            $path = $request->file('image')->store('candidates/images', 'public');
+
+            // 3. إنشاء السجل في جدول الصور المرتبط
+            $candidate->image()->create([
+                'name' => 'الصورة الشخصية - ' . $candidate->Name,
+                'file_path' => $path,
+                'DocumentType' => 'Profile Picture'
+            ]);
         }
-
-        // تحديث السجل في قاعدة البيانات
-        $candidate->update($dataToUpdate);
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'تم تحديث بيانات طلبك بنجاح.',
-            'data' => $candidate
-        ]);
     }
 }
