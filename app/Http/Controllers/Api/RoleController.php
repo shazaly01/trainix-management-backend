@@ -88,68 +88,73 @@ class RoleController extends Controller
      * Get all available permissions.
      * هذه الدالة لا يتم حمايتها بـ authorizeResource، لذا نضيف الصلاحية يدويًا
      */
-   public function getAllPermissions()
-    {
-        $this->authorize('viewAny', Role::class);
+ public function getAllPermissions()
+{
+    $this->authorize('viewAny', Role::class);
 
-        // 1. قاموس الترجمة
-        $groupTranslations = [
-            'dashboard' => 'لوحة التحكم',
-            'user' => 'المستخدمون',
-            'role' => 'الأدوار',
-            'company' => 'الشركات',
-            'setting' => 'الإعدادات',
-            // --- الإضافات الجديدة ---
-            'project' => 'المشاريع',
-            'payment' => 'المدفوعات',
-            'document' => 'المستندات',
-            'backup' => 'النسخ الاحتياطي',
-            'owner' => 'الجهه المالكة',
-        ];
+    // 1. قاموس الترجمة المحدث (بناءً على الشاشات الأربعة + إدارة النظام)
+    $groupTranslations = [
+        'dashboard'    => 'لوحة التحكم',
+        'user'         => 'المستخدمون',
+        'role'         => 'الأدوار والتحكم',
+        'department'   => 'الإدارات',
+        'candidate'    => 'المترشحين',
+        'document'     => 'المستندات',
+        'job_request'  => 'طلبات التدريب',
+        'setting'      => 'الإعدادات',
+        'backup'       => 'النسخ الاحتياطي',
+    ];
 
-        $actionTranslations = [
-            'view' => 'عرض', 'create' => 'إنشاء', 'update' => 'تعديل', 'delete' => 'حذف',
-        ];
+    $actionTranslations = [
+        'view' => 'عرض',
+        'create' => 'إنشاء',
+        'update' => 'تعديل',
+        'delete' => 'حذف',
+        'download' => 'تحميل' // أضفتها من أجل النسخ الاحتياطي
+    ];
 
-        // 2. جلب كل الصلاحيات وتجميعها حسب المجموعة
-        $permissions = Permission::where('guard_name', 'api')->get()->groupBy(function ($permission) {
-            return explode('.', $permission->name)[0];
-        });
+    // 2. جلب كل الصلاحيات وتجميعها حسب المجموعة (ما قبل النقطة)
+    $permissions = Permission::where('guard_name', 'api')->get()->groupBy(function ($permission) {
+        return explode('.', $permission->name)[0];
+    });
 
-        // 3. بناء هيكل المجموعات (groups)
-        $structuredGroups = [];
-        foreach ($permissions as $groupKey => $permissionGroup) {
-            $groupPermissions = [];
-            foreach ($permissionGroup as $p) {
-                $actionKey = explode('.', $p->name)[1];
-                // تأكد من أن الإجراء موجود في قاموس الترجمة قبل إضافته
-                if (array_key_exists($actionKey, $actionTranslations)) {
-                    $groupPermissions[] = [
-                        'id' => $p->id,
-                        'action' => $actionKey,
-                    ];
-                }
-            }
+    // 3. بناء هيكل المجموعات (groups)
+    $structuredGroups = [];
+    foreach ($permissions as $groupKey => $permissionGroup) {
+        $groupPermissions = [];
+        foreach ($permissionGroup as $p) {
+            $parts = explode('.', $p->name);
+            $actionKey = $parts[1] ?? null;
 
-            // أضف المجموعة فقط إذا كانت تحتوي على صلاحيات
-            if (!empty($groupPermissions)) {
-                $structuredGroups[] = [
-                    'key' => $groupKey,
-                    'display_name' => $groupTranslations[$groupKey] ?? $groupKey,
-                    'permissions' => $groupPermissions,
+            // نتحقق من وجود الإجراء في القاموس لإضافته
+            if ($actionKey && array_key_exists($actionKey, $actionTranslations)) {
+                $groupPermissions[] = [
+                    'id' => $p->id,
+                    'action' => $actionKey,
+                    'display_name' => $actionTranslations[$actionKey], // مريح للفرونت إند
                 ];
             }
         }
 
-        // 4. بناء هيكل الإجراءات (actions)
-        $allActions = collect($actionTranslations)->map(function ($displayName, $key) {
-            return ['key' => $key, 'display_name' => $displayName];
-        })->values();
-
-        // 5. إرجاع الاستجابة النهائية
-        return response()->json([
-            'groups' => $structuredGroups,
-            'actions' => $allActions,
-        ]);
+        // أضف المجموعة فقط إذا كانت تحتوي على صلاحيات وموجودة في قاموسنا
+        if (!empty($groupPermissions) && array_key_exists($groupKey, $groupTranslations)) {
+            $structuredGroups[] = [
+                'key' => $groupKey,
+                'display_name' => $groupTranslations[$groupKey],
+                'permissions' => $groupPermissions,
+            ];
+        }
     }
+
+    // 4. بناء هيكل الإجراءات (actions) المتاح للعرض العام في الواجهة
+    $allActions = collect($actionTranslations)->map(function ($displayName, $key) {
+        return ['key' => $key, 'display_name' => $displayName];
+    })->values();
+
+    // 5. إرجاع الاستجابة النهائية
+    return response()->json([
+        'groups' => $structuredGroups,
+        'actions' => $allActions,
+    ]);
+}
 }

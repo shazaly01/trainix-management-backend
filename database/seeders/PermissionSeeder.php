@@ -11,79 +11,71 @@ class PermissionSeeder extends Seeder
 {
     public function run(): void
     {
+        // 1. تصفير الكاش لضمان الحذف التام للصلاحيات القديمة
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $guardName = 'api';
 
+        // 2. تعريف الشاشات الأربعة فقط + لوحة التحكم وإدارة النظام الأساسية
         $permissions = [
             'dashboard.view',
 
-            // إدارة النظام الأساسية
-            'user.view', 'user.create', 'user.update', 'user.delete',
-            'role.view', 'role.create', 'role.update', 'role.delete',
-            'setting.view', 'setting.update',
-            'backup.view', 'backup.create', 'backup.delete', 'backup.download',
-
-            // الكيانات القاموسية
-            'city.view', 'city.create', 'city.update', 'city.delete',
+            // أ. الإدارات (Departments)
             'department.view', 'department.create', 'department.update', 'department.delete',
 
-            // كيانات التوظيف الأساسية
-            'applicant.view', 'applicant.create', 'applicant.update', 'applicant.delete',
-            'job_request.view', 'job_request.create', 'job_request.update', 'job_request.delete',
-            'application.view', 'application.create', 'application.update', 'application.delete',
-            'interview.view', 'interview.create', 'interview.update', 'interview.delete',
+            // ب. المترشحين (Candidates)
+            'candidate.view', 'candidate.create', 'candidate.update', 'candidate.delete',
+
+            // ج. المستندات (Documents)
             'document.view', 'document.create', 'document.update', 'document.delete',
 
-            // 🌟 صلاحيات المترشحين الجديدة
-            'candidate.view', 'candidate.create', 'candidate.update', 'candidate.delete',
+            // د. طلبات التدريب/الوظائف (Job Requests)
+            'job_request.view', 'job_request.create', 'job_request.update', 'job_request.delete',
+
+            // صلاحيات تقنية للمدراء فقط (إدارة المستخدمين والنسخ الاحتياطي)
+            'user.view', 'user.create', 'user.update', 'user.delete',
+            'role.view', 'role.create', 'role.update', 'role.delete',
+            'backup.view', 'backup.create', 'backup.delete', 'backup.download',
+            'setting.view', 'setting.update',
         ];
 
+        // إنشاء الصلاحيات
         foreach ($permissions as $permission) {
-            Permission::firstOrCreate([
-                'name' => $permission,
-                'guard_name' => $guardName,
-            ]);
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => $guardName]);
         }
 
-        Role::firstOrCreate([
-            'name' => 'Super Admin',
-            'guard_name' => $guardName,
-        ]);
+        // 3. بناء الرتب (Roles) بناءً على الشاشات المختارة
 
-        $recruitmentOfficer = Role::firstOrCreate([
-            'name' => 'Recruitment Officer',
-            'guard_name' => $guardName,
-        ]);
+        // --- Super Admin & Admin: يرى كل الشاشات الأربعة + التحكم بالنظام ---
+        $admin = Role::firstOrCreate(['name' => 'Admin', 'guard_name' => $guardName]);
+        $superAdmin = Role::firstOrCreate(['name' => 'Super Admin', 'guard_name' => $guardName]);
 
-        $officerPermissions = [
+        $adminPermissions = Permission::where('guard_name', $guardName)->get();
+        $admin->syncPermissions($adminPermissions);
+        $superAdmin->syncPermissions($adminPermissions);
+
+        // --- Data Entry: يرى فقط الشاشات الأربعة التي حددتها (صلاحيات كاملة فيها) ---
+        $dataEntry = Role::firstOrCreate(['name' => 'Data Entry', 'guard_name' => $guardName]);
+        $dataEntryPermissions = [
             'dashboard.view',
-            'applicant.view', 'applicant.create', 'applicant.update', 'applicant.delete',
-            'application.view', 'application.create', 'application.update', 'application.delete',
-            'interview.view', 'interview.create', 'interview.update', 'interview.delete',
-            'document.view', 'document.create', 'document.update', 'document.delete',
-            'job_request.view',
-            'city.view', 'department.view',
-            // 🌟 إضافة صلاحيات المترشحين لموظف التوظيف
+            'department.view', 'department.create', 'department.update', 'department.delete',
             'candidate.view', 'candidate.create', 'candidate.update', 'candidate.delete',
-        ];
-        $recruitmentOfficer->syncPermissions($officerPermissions);
-
-        $departmentManager = Role::firstOrCreate([
-            'name' => 'Department Manager',
-            'guard_name' => $guardName,
-        ]);
-
-        $managerPermissions = [
-            'dashboard.view',
+            'document.view', 'document.create', 'document.update', 'document.delete',
             'job_request.view', 'job_request.create', 'job_request.update', 'job_request.delete',
-            'applicant.view',
-            'application.view', 'application.update',
-            'interview.view', 'interview.update',
-            'document.view',
-            // 🌟 إضافة صلاحية عرض المترشحين لمدير الإدارة
-            'candidate.view',
         ];
-        $departmentManager->syncPermissions($managerPermissions);
+        $dataEntry->syncPermissions($dataEntryPermissions);
+
+        // --- Auditor: يرى الشاشات الأربعة "عرض فقط" للقراءة والتدقيق ---
+        $auditor = Role::firstOrCreate(['name' => 'Auditor', 'guard_name' => $guardName]);
+        $auditorPermissions = [
+            'dashboard.view',
+            'department.view',
+            'candidate.view',
+            'document.view',
+            'job_request.view',
+        ];
+        $auditor->syncPermissions($auditorPermissions);
+
+        $this->command->info('✅ تم الحصر بنجاح: النظام الآن يتكون من 4 شاشات أساسية فقط.');
     }
 }
