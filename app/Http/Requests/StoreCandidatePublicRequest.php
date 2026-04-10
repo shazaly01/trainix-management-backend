@@ -16,10 +16,12 @@ class StoreCandidatePublicRequest extends FormRequest
         return [
             // الدورة التدريبية
             'job_request_id' => ['required', 'exists:job_requests,id'],
+            'TrainingType' => ['required', 'in:internal,external'],
 
             // البيانات الأساسية
             'Name' => ['required', 'string', 'max:255'],
             'NationalNo' => ['required', 'numeric', 'digits_between:10,18'],
+
 
             // بيانات إضافية
             'BirthDate' => ['nullable', 'date'],

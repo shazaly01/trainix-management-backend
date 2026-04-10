@@ -22,6 +22,7 @@ class Candidate extends Model
         'PassportNo',
         'PassportExpiry',
         'NationalNo',
+        'TrainingType',
         'Phone',
         'Residence',
         'Size',

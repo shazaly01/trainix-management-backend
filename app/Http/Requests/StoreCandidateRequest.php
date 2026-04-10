@@ -22,6 +22,7 @@ class StoreCandidateRequest extends FormRequest
             'PassportNo' => ['nullable', 'string', 'max:50'],
             'PassportExpiry' => ['nullable', 'date'],
             'NationalNo' => ['nullable', 'numeric', 'unique:candidates,NationalNo'],
+            'TrainingType' => ['required', 'in:internal,external'],
             'Phone' => ['nullable', 'string', 'max:50'],
             'Residence' => ['nullable', 'string', 'max:255'],
             'Size' => ['nullable', 'string', 'max:50'],

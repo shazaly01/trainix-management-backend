@@ -30,6 +30,7 @@ class UpdateCandidateRequest extends FormRequest
                 'numeric',
                 Rule::unique('candidates')->ignore($this->route('candidate'))
             ],
+            'TrainingType' => ['required', 'in:internal,external'],
             'Phone' => ['nullable', 'string', 'max:50'],
             'Residence' => ['nullable', 'string', 'max:255'],
             'Size' => ['nullable', 'string', 'max:50'],

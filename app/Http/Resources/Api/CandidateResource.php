@@ -23,6 +23,7 @@ class CandidateResource extends JsonResource
 
             // تطبيق القاعدة هنا أيضاً للرقم الوطني
             'NationalNo' => (string) $this->NationalNo,
+            'TrainingType' => $this->TrainingType,
 
             'Phone' => $this->Phone,
             'Residence' => $this->Residence,

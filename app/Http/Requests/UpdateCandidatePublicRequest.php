@@ -18,6 +18,7 @@ class UpdateCandidatePublicRequest extends FormRequest
             'verification_code' => ['required', 'string'],
             'passport_no' => ['required_without:NationalNo', 'string'],
             'NationalNo' => ['required_without:passport_no', 'numeric'],
+            'TrainingType' => ['required', 'in:internal,external'],
 
             // البيانات المسموح بتعديلها (استخدمنا sometimes لكي يتم التحديث فقط للحقول المُرسلة)
             'Name' => ['sometimes', 'required', 'string', 'max:255'],

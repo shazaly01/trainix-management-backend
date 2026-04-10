@@ -56,6 +56,10 @@ public function index(Request $request): AnonymousResourceCollection
         $query->where('IsFit', (bool)$request->IsFit);
     }
 
+    $query->when($request->TrainingType, function ($q, $type) {
+    $q->where('TrainingType', $type);
+});
+
     // 6. الترتيب والجلب مع التصفح
     // نستخدم appends لضمان بقاء الفلاتر فعالة عند التنقل بين الصفحات
     $candidates = $query->latest()->paginate(15)->appends($request->query());
