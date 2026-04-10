@@ -45,23 +45,27 @@ public function index(Request $request): AnonymousResourceCollection
         $q->where('Residence', 'like', "%{$residence}%");
     });
 
+    // 👈 الفلتر الجديد: المؤهل العلمي (بحث جزئي)
+    $query->when($request->Qualification, function ($q, $qualification) {
+        $q->where('Qualification', 'like', "%{$qualification}%");
+    });
+
     // 4. فلتر المقاس (مطابقة تامة)
     $query->when($request->Size, function ($q, $size) {
         $q->where('Size', $size);
     });
 
     // 5. فلتر حالة اللياقة
-    // نستخدم has لنتأكد أن القيمة أُرسلت فعلاً (لأنها قد تكون 0)
     if ($request->has('IsFit') && $request->IsFit !== '') {
         $query->where('IsFit', (bool)$request->IsFit);
     }
 
+    // 6. فلتر نوع التدريب
     $query->when($request->TrainingType, function ($q, $type) {
-    $q->where('TrainingType', $type);
-});
+        $q->where('TrainingType', $type);
+    });
 
-    // 6. الترتيب والجلب مع التصفح
-    // نستخدم appends لضمان بقاء الفلاتر فعالة عند التنقل بين الصفحات
+    // 7. الترتيب والجلب مع التصفح
     $candidates = $query->latest()->paginate(15)->appends($request->query());
 
     return CandidateResource::collection($candidates);
