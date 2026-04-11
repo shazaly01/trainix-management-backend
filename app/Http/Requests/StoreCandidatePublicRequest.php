@@ -32,6 +32,9 @@ class StoreCandidatePublicRequest extends FormRequest
             'Residence' => ['nullable', 'string', 'max:255'],
             'Size' => ['nullable', 'string', 'max:10'],
             'Notes' => ['nullable', 'string'],
+            'BankName' => ['nullable', 'string', 'max:255'],
+        'BankAccountNo' => ['nullable', 'string', 'max:50'],
+        'ShoeSize' => ['nullable', 'numeric'],
 
             // 🔥 إضافة حقل الصورة هنا هو السر 🔥
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],

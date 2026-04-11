@@ -9,29 +9,36 @@ use App\Http\Requests\UpdateCandidatePublicRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Resources\Api\CandidateResource;
 
 class PublicCandidateController extends Controller
 {
     /**
      * مسار التقديم العام - إضافة مترشح جديد مع صورته
      */
-    public function submitApplication(StoreCandidatePublicRequest $request): JsonResponse
-    {
-        // 1. حفظ بيانات المترشح الأساسية
-        $candidate = Candidate::create($request->validated());
+   public function submitApplication(StoreCandidatePublicRequest $request): JsonResponse
+{
+    // جلب البيانات التي تم التحقق منها
+    $validatedData = $request->validated();
 
-        // 2. معالجة رفع الصورة الشخصية (بنفس منطق السيستم الداخلي)
-        $this->handlePublicImageUpload($request, $candidate);
+    // إجبار الحالة على "غير معتمد" مهما كانت البيانات القادمة من الفرونت إند
+    $validatedData['is_approved'] = false;
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'تم استلام طلبك بنجاح. يرجى الاحتفاظ برقم التحقق.',
-            'data' => [
-                'verification_code' => $candidate->VerificationCode,
-                'name' => $candidate->Name
-            ]
-        ], 201);
-    }
+    // إنشاء السجل
+    $candidate = Candidate::create($validatedData);
+
+    // معالجة رفع الصورة (باستخدام الدالة المساعدة الموجودة لديك)
+    $this->handlePublicImageUpload($request, $candidate);
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'تم استلام طلبك بنجاح. وهو الآن قيد المراجعة والتدقيق.',
+        'data' => [
+            'verification_code' => $candidate->VerificationCode,
+            'name' => $candidate->Name
+        ]
+    ], 201);
+}
 
     /**
      * جلب بيانات المترشح (مع شحن علاقة الصورة)
@@ -64,7 +71,10 @@ class PublicCandidateController extends Controller
             $candidate->image_url = asset('storage/' . $candidate->image->file_path);
         }
 
-        return response()->json(['status' => 'success', 'data' => $candidate]);
+       return response()->json([
+        'status' => 'success',
+        'data' => new CandidateResource($candidate)
+    ]);
     }
 
     /**
@@ -82,7 +92,7 @@ class PublicCandidateController extends Controller
         $candidate->update($request->validated());
 
         // تحديث الصورة (حذف القديمة ورفع الجديدة)
-        $this->handlePublicImageUpload($request, $candidate);
+       // $this->handlePublicImageUpload($request, $candidate);
 
         return response()->json([
             'status' => 'success',

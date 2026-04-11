@@ -27,6 +27,10 @@ class UpdateCandidatePublicRequest extends FormRequest
             'Phone' => ['nullable', 'string', 'max:20'],
             'Residence' => ['nullable', 'string', 'max:255'],
             'Size' => ['nullable', 'string', 'max:10'],
+'Notes' => ['nullable', 'string'],
+            'BankName' => ['nullable', 'string', 'max:255'],
+        'BankAccountNo' => ['nullable', 'string', 'max:50'],
+        'ShoeSize' => ['nullable', 'numeric'],
 
             // نمنع تعديل job_request_id بعد التقديم لضمان عدم التلاعب (لذلك لم نضفه هنا)
         ];

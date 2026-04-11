@@ -23,62 +23,108 @@ class CandidateController extends Controller
     }
 
     /**
-     * عرض قائمة المترشحين
+     * عرض قائمة المترشحين (المعتمدين فقط - البيانات النهائية)
      */
+    public function index(Request $request): AnonymousResourceCollection
+    {
+        // استخدام scopeApproved لجلب البيانات المعتمدة فقط
+        $query = Candidate::query()->approved()->with('image');
 
-public function index(Request $request): AnonymousResourceCollection
-{
-    // 1. نبدأ بإنشاء الاستعلام مع شحن الصور
-    $query = Candidate::query()->with('image');
-
-    // 2. فلتر البحث العام (الاسم، الرقم الوطني، الهاتف)
-    $query->when($request->search, function ($q, $search) {
-        $q->where(function ($sq) use ($search) {
-            $sq->where('Name', 'like', "%{$search}%")
-               ->orWhere('NationalNo', 'like', "%{$search}%")
-               ->orWhere('Phone', 'like', "%{$search}%");
+        // فلتر البحث العام (الاسم، الرقم الوطني، الهاتف)
+        $query->when($request->search, function ($q, $search) {
+            $q->where(function ($sq) use ($search) {
+                $sq->where('Name', 'like', "%{$search}%")
+                   ->orWhere('NationalNo', 'like', "%{$search}%")
+                   ->orWhere('Phone', 'like', "%{$search}%");
+            });
         });
+
+        // فلتر السكن
+        $query->when($request->Residence, function ($q, $residence) {
+            $q->where('Residence', 'like', "%{$residence}%");
+        });
+
+        // فلتر المؤهل العلمي
+        $query->when($request->Qualification, function ($q, $qualification) {
+            $q->where('Qualification', 'like', "%{$qualification}%");
+        });
+
+        // فلتر المقاس
+        $query->when($request->Size, function ($q, $size) {
+            $q->where('Size', $size);
+        });
+
+        $query->when($request->ShoeSize, function ($q, $shoeSize) {
+        $q->where('ShoeSize', $shoeSize);
     });
 
-    // 3. فلتر السكن (بحث جزئي)
-    $query->when($request->Residence, function ($q, $residence) {
-        $q->where('Residence', 'like', "%{$residence}%");
-    });
+        // فلتر حالة اللياقة
+        if ($request->has('IsFit') && $request->IsFit !== '') {
+            $query->where('IsFit', (bool)$request->IsFit);
+        }
 
-    // 👈 الفلتر الجديد: المؤهل العلمي (بحث جزئي)
-    $query->when($request->Qualification, function ($q, $qualification) {
-        $q->where('Qualification', 'like', "%{$qualification}%");
-    });
+        // فلتر نوع التدريب
+        $query->when($request->TrainingType, function ($q, $type) {
+            $q->where('TrainingType', $type);
+        });
 
-    // 4. فلتر المقاس (مطابقة تامة)
-    $query->when($request->Size, function ($q, $size) {
-        $q->where('Size', $size);
-    });
+        // الترتيب والجلب
+        $perPage = $request->get('per_page', 15);
 
-    // 5. فلتر حالة اللياقة
-    if ($request->has('IsFit') && $request->IsFit !== '') {
-        $query->where('IsFit', (bool)$request->IsFit);
+        if ($perPage == -1) {
+            $candidates = $query->latest()->get();
+        } else {
+            $candidates = $query->latest()->paginate($perPage)->appends($request->query());
+        }
+
+        return CandidateResource::collection($candidates);
     }
 
-    // 6. فلتر نوع التدريب
-    $query->when($request->TrainingType, function ($q, $type) {
-        $q->where('TrainingType', $type);
-    });
-
-    // 7. الترتيب والجلب مع التصفح
-    $candidates = $query->latest()->paginate(15)->appends($request->query());
-
-    return CandidateResource::collection($candidates);
-}
     /**
-     * إضافة مترشح جديد
+     * عرض قائمة الطلبات "تحت المراجعة" (التقديم الخارجي فقط)
+     */
+    public function pendingList(Request $request): AnonymousResourceCollection
+    {
+        // استخدام scopePending لجلب الطلبات التي لم يتم اعتمادها بعد
+        $query = Candidate::query()->pending()->with('image');
+
+        // يمكنك تطبيق نفس فلاتر البحث هنا إذا كنت تريد البحث داخل الطلبات المعلقة
+        $query->when($request->search, function ($q, $search) {
+            $q->where('Name', 'like', "%{$search}%");
+        });
+
+        $candidates = $query->latest()->paginate($request->get('per_page', 15));
+
+        return CandidateResource::collection($candidates);
+    }
+
+    /**
+     * اعتماد مترشح ونقله للبيانات النهائية
+     */
+    public function approve($id): JsonResponse
+    {
+        $candidate = Candidate::findOrFail($id);
+
+        $candidate->update([
+            'is_approved' => true
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'تم اعتماد المترشح بنجاح وظهوره في القوائم النهائية.'
+        ], 200);
+    }
+
+    /**
+     * إضافة مترشح جديد (إدخال يدوي داخلي - معتمد تلقائياً)
      */
     public function store(StoreCandidateRequest $request): CandidateResource
     {
+        $data = $request->validated();
+        $data['is_approved'] = true; // الإدخال المباشر من النظام يعتبر معتمداً
 
-        $candidate = Candidate::create($request->validated());
+        $candidate = Candidate::create($data);
 
-        // معالجة الصورة المرفقة إن وجدت
         $this->handleImageUpload($request, $candidate);
 
         return new CandidateResource($candidate->load('image'));
@@ -99,14 +145,13 @@ public function index(Request $request): AnonymousResourceCollection
     {
         $candidate->update($request->validated());
 
-        // معالجة تحديث الصورة (استبدالها إن تم رفع واحدة جديدة)
         $this->handleImageUpload($request, $candidate);
 
         return new CandidateResource($candidate->load('image'));
     }
 
     /**
-     * نقل المترشح إلى الأرشيف (Soft Delete)
+     * حذف/أرشفة المترشح
      */
     public function destroy(Candidate $candidate): JsonResponse
     {
@@ -119,26 +164,18 @@ public function index(Request $request): AnonymousResourceCollection
     }
 
     /**
-     * دالة مساعدة خاصة لمعالجة رفع الصورة الشخصية
-     */
-  /**
-     * دالة مساعدة خاصة لمعالجة رفع الصورة الشخصية
+     * دالة مساعدة لمعالجة رفع الصور الشخصية
      */
     private function handleImageUpload($request, Candidate $candidate): void
     {
         if ($request->hasFile('image')) {
-            // 1. حذف الصورة القديمة من التخزين وقاعدة البيانات إذا كانت موجودة
             if ($candidate->image) {
-                // ✅ التعديل هنا: استخدام 'local' بدلاً من 'public'
                 Storage::disk('local')->delete($candidate->image->file_path);
                 $candidate->image()->delete();
             }
 
-            // 2. رفع الصورة الجديدة في مجلد candidates/images
-            // ✅ التعديل هنا: استخدام 'local' بدلاً من 'public'
             $path = $request->file('image')->store('candidates/images', 'local');
 
-            // 3. إنشاء سجل المستند وربطه بالمرشح (علاقة Polymorphic)
             $candidate->image()->create([
                 'name' => 'الصورة الشخصية - ' . $candidate->Name,
                 'file_path' => $path,

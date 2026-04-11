@@ -30,6 +30,8 @@ class Candidate extends Model
         'Notes',
         'BankName',
     'BankAccountNo',
+    'is_approved',
+    'ShoeSize',
     ];
 
     protected $casts = [
@@ -38,6 +40,8 @@ class Candidate extends Model
         'BirthDate' => 'date',
         'PassportExpiry' => 'date',
         'IsFit' => 'boolean',
+        'is_approved' => 'boolean',
+        'ShoeSize' => 'decimal:0',
     ];
 
     /**
@@ -81,4 +85,16 @@ class Candidate extends Model
         return $this->morphOne(Document::class, 'documentable')
                     ->where('DocumentType', 'Applicant File');
     }
+
+
+    public function scopeApproved($query)
+{
+    return $query->where('is_approved', true);
+}
+
+// لجلب الطلبات الجديدة (الخارجية) التي لم تُراجع بعد
+public function scopePending($query)
+{
+    return $query->where('is_approved', false);
+}
 }
