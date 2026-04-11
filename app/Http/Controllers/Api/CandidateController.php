@@ -121,17 +121,22 @@ public function index(Request $request): AnonymousResourceCollection
     /**
      * دالة مساعدة خاصة لمعالجة رفع الصورة الشخصية
      */
+  /**
+     * دالة مساعدة خاصة لمعالجة رفع الصورة الشخصية
+     */
     private function handleImageUpload($request, Candidate $candidate): void
     {
         if ($request->hasFile('image')) {
             // 1. حذف الصورة القديمة من التخزين وقاعدة البيانات إذا كانت موجودة
             if ($candidate->image) {
-                Storage::disk('public')->delete($candidate->image->file_path);
+                // ✅ التعديل هنا: استخدام 'local' بدلاً من 'public'
+                Storage::disk('local')->delete($candidate->image->file_path);
                 $candidate->image()->delete();
             }
 
             // 2. رفع الصورة الجديدة في مجلد candidates/images
-            $path = $request->file('image')->store('candidates/images', 'public');
+            // ✅ التعديل هنا: استخدام 'local' بدلاً من 'public'
+            $path = $request->file('image')->store('candidates/images', 'local');
 
             // 3. إنشاء سجل المستند وربطه بالمرشح (علاقة Polymorphic)
             $candidate->image()->create([
