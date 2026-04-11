@@ -74,4 +74,11 @@ class Candidate extends Model
         return $this->morphOne(Document::class, 'documentable')
                     ->where('DocumentType', 'Profile Picture');
     }
+
+
+    public function attachment(): MorphOne
+    {
+        return $this->morphOne(Document::class, 'documentable')
+                    ->where('DocumentType', 'Applicant File');
+    }
 }
