@@ -124,7 +124,13 @@ Route::middleware('auth:sanctum')->group(function () {
         ->only(['index', 'show', 'destroy'])
         ->except(['store']);
 
-        Route::apiResource('candidates', CandidateController::class);
+        Route::get('candidates/pending', [CandidateController::class, 'pendingList']);
+
+    // 2. مسار الاعتماد
+    Route::post('candidates/{id}/approve', [CandidateController::class, 'approve']);
+
+    // 3. مسار الموارد الأساسي (CRUD)
+    Route::apiResource('candidates', CandidateController::class);
 });
 
 /**

@@ -83,14 +83,51 @@ class CandidateController extends Controller
     /**
      * عرض قائمة الطلبات "تحت المراجعة" (التقديم الخارجي فقط)
      */
+    /**
+     * عرض قائمة الطلبات "تحت المراجعة" (التقديم الخارجي فقط)
+     */
     public function pendingList(Request $request): AnonymousResourceCollection
     {
         // استخدام scopePending لجلب الطلبات التي لم يتم اعتمادها بعد
         $query = Candidate::query()->pending()->with('image');
 
-        // يمكنك تطبيق نفس فلاتر البحث هنا إذا كنت تريد البحث داخل الطلبات المعلقة
+        // 1. فلتر البحث العام (الاسم، الرقم الوطني، الهاتف)
         $query->when($request->search, function ($q, $search) {
-            $q->where('Name', 'like', "%{$search}%");
+            $q->where(function ($sq) use ($search) {
+                $sq->where('Name', 'like', "%{$search}%")
+                   ->orWhere('NationalNo', 'like', "%{$search}%")
+                   ->orWhere('Phone', 'like', "%{$search}%");
+            });
+        });
+
+        // 2. فلتر السكن
+        $query->when($request->Residence, function ($q, $residence) {
+            $q->where('Residence', 'like', "%{$residence}%");
+        });
+
+        // 3. فلتر المؤهل العلمي
+        $query->when($request->Qualification, function ($q, $qualification) {
+            $q->where('Qualification', 'like', "%{$qualification}%");
+        });
+
+        // 4. فلتر المقاس
+        $query->when($request->Size, function ($q, $size) {
+            $q->where('Size', $size);
+        });
+
+        // 5. فلتر رقم الحذاء (الذي أضفناه مؤخراً)
+        $query->when($request->ShoeSize, function ($q, $shoeSize) {
+            $q->where('ShoeSize', $shoeSize);
+        });
+
+        // 6. فلتر حالة اللياقة
+        if ($request->has('IsFit') && $request->IsFit !== '') {
+            $query->where('IsFit', (bool)$request->IsFit);
+        }
+
+        // 7. فلتر نوع التدريب
+        $query->when($request->TrainingType, function ($q, $type) {
+            $q->where('TrainingType', $type);
         });
 
         $candidates = $query->latest()->paginate($request->get('per_page', 15));

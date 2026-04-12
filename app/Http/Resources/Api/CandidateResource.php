@@ -46,7 +46,7 @@ class CandidateResource extends JsonResource
             'is_approved' => $this->is_approved,
 
             // استدعاء ملف الـ Resource الخاص بالمرفقات لجلب بيانات ورابط الصورة الشخصية
-            'image_url' => $this->image ? asset('storage/' . $this->image->file_path) : null,
+            'image_url' => $this->image ? \Illuminate\Support\Facades\URL::signedRoute('documents.download', $this->image->id) : null,
 
             'CreatedAt' => $this->created_at->format('Y-m-d H:i'),
             'UpdatedAt' => $this->updated_at->format('Y-m-d H:i'),
