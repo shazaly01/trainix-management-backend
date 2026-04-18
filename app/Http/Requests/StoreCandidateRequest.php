@@ -13,7 +13,7 @@ class StoreCandidateRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        $rules = [
             // الأرقام الطويلة أضفنا لها numeric
             'SequenceNo' => ['nullable', 'numeric', 'unique:candidates,SequenceNo'],
             'Name' => ['required', 'string', 'max:255'],
@@ -26,15 +26,21 @@ class StoreCandidateRequest extends FormRequest
             'Phone' => ['nullable', 'string', 'max:50'],
             'Residence' => ['nullable', 'string', 'max:255'],
             'Size' => ['nullable', 'string', 'max:50'],
-            'IsFit' => ['boolean'],
             'Notes' => ['nullable', 'string'],
             'BankName' => ['nullable', 'string', 'max:255'],
-        'BankAccountNo' => ['nullable', 'string', 'max:50'],
-        'ShoeSize' => ['nullable', 'numeric'],
+            'BankAccountNo' => ['nullable', 'string', 'max:50'],
+            'ShoeSize' => ['nullable', 'numeric'],
 
             // التحقق من الصورة المرفقة (اختيارية، ويجب أن تكون صورة بحجم أقصى 5 ميجا)
             'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],
         ];
+
+        // 👈 التعديل هنا: نقبل حقل IsFit فقط إذا كان المستخدم يمتلك صلاحية التعديل عليه
+        if ($this->user() && $this->user()->can('candidate.update_isfit')) {
+            $rules['IsFit'] = ['boolean'];
+        }
+
+        return $rules;
     }
 
     public function attributes(): array

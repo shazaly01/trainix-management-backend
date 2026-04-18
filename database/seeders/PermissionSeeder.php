@@ -26,6 +26,9 @@ class PermissionSeeder extends Seeder
             // ب. المترشحين (Candidates)
             'candidate.view', 'candidate.create', 'candidate.update', 'candidate.delete',
 
+            // ---> إضافة صلاحيات حقل اللياقة هنا <---
+            'candidate.view_isfit', 'candidate.update_isfit',
+
             // ج. المستندات (Documents)
             'document.view', 'document.create', 'document.update', 'document.delete',
 
@@ -76,6 +79,6 @@ class PermissionSeeder extends Seeder
         ];
         $auditor->syncPermissions($auditorPermissions);
 
-        $this->command->info('✅ تم الحصر بنجاح: النظام الآن يتكون من 4 شاشات أساسية فقط.');
+        $this->command->info('✅ تم الحصر بنجاح: النظام الآن يتكون من 4 شاشات أساسية فقط (وتمت إضافة صلاحيات حقل IsFit).');
     }
 }

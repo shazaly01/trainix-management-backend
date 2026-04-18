@@ -14,7 +14,7 @@ class UpdateCandidateRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        $rules = [
             'SequenceNo' => [
                 'nullable',
                 'numeric',
@@ -34,14 +34,19 @@ class UpdateCandidateRequest extends FormRequest
             'Phone' => ['nullable', 'string', 'max:50'],
             'Residence' => ['nullable', 'string', 'max:255'],
             'Size' => ['nullable', 'string', 'max:50'],
-            'IsFit' => ['boolean'],
             'Notes' => ['nullable', 'string'],
-          'BankName' => ['nullable', 'string', 'max:255'],
-        'BankAccountNo' => ['nullable', 'string', 'max:50'],
-        'ShoeSize' => ['nullable', 'numeric'],
-
-           'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],
+            'BankName' => ['nullable', 'string', 'max:255'],
+            'BankAccountNo' => ['nullable', 'string', 'max:50'],
+            'ShoeSize' => ['nullable', 'numeric'],
+            'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],
         ];
+
+        // 👈 التعديل هنا: يتم قبول الحقل فقط إذا كان المستخدم يملك صلاحية التعديل عليه
+        if ($this->user() && $this->user()->can('candidate.update_isfit')) {
+            $rules['IsFit'] = ['boolean'];
+        }
+
+        return $rules;
     }
 
     public function attributes(): array

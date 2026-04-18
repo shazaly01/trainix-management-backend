@@ -110,7 +110,9 @@ class RoleController extends Controller
         'create' => 'إنشاء',
         'update' => 'تعديل',
         'delete' => 'حذف',
-        'download' => 'تحميل' // أضفتها من أجل النسخ الاحتياطي
+        'download' => 'تحميل',
+        'view_isfit' => 'عرض حالة اللياقة',
+        'update_isfit' => 'تعديل حالة اللياقة',
     ];
 
     // 2. جلب كل الصلاحيات وتجميعها حسب المجموعة (ما قبل النقطة)

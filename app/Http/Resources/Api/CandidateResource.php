@@ -32,17 +32,19 @@ class CandidateResource extends JsonResource
             'Residence' => $this->Residence,
             'Size' => $this->Size,
 
-            // 👈 إضافة رقم الحذاء هنا (مع تحويله لنص كونه Decimal)
+            // إضافة رقم الحذاء هنا (مع تحويله لنص كونه Decimal)
             'ShoeSize' => (string) $this->ShoeSize,
 
-            'IsFit' => $this->IsFit,
+            // 👈 التعديل هنا: إرجاع الحقل فقط إذا كان المستخدم يمتلك الصلاحية
+            'IsFit' => $this->when($request->user() && $request->user()->can('candidate.view_isfit'), $this->IsFit),
+
             'Notes' => $this->Notes,
 
             // حقول البنك
             'BankName' => $this->BankName,
             'BankAccountNo' => $this->BankAccountNo,
 
-            // 👈 إضافة حالة الاعتماد (لتستفيد منها في لوحة التحكم لاحقاً)
+            // إضافة حالة الاعتماد (لتستفيد منها في لوحة التحكم لاحقاً)
             'is_approved' => $this->is_approved,
 
             // استدعاء ملف الـ Resource الخاص بالمرفقات لجلب بيانات ورابط الصورة الشخصية

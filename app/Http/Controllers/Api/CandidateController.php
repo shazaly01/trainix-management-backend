@@ -59,7 +59,7 @@ class CandidateController extends Controller
     });
 
         // فلتر حالة اللياقة
-        if ($request->has('IsFit') && $request->IsFit !== '') {
+        if ($request->has('IsFit') && $request->IsFit !== '' && $request->user()?->can('candidate.view_isfit')) {
             $query->where('IsFit', (bool)$request->IsFit);
         }
 
@@ -121,7 +121,7 @@ class CandidateController extends Controller
         });
 
         // 6. فلتر حالة اللياقة
-        if ($request->has('IsFit') && $request->IsFit !== '') {
+       if ($request->has('IsFit') && $request->IsFit !== '' && $request->user()?->can('candidate.view_isfit')) {
             $query->where('IsFit', (bool)$request->IsFit);
         }
 
@@ -157,8 +157,11 @@ class CandidateController extends Controller
      */
     public function store(StoreCandidateRequest $request): CandidateResource
     {
-        $data = $request->validated();
+       $data = $request->validated();
         $data['is_approved'] = true; // الإدخال المباشر من النظام يعتبر معتمداً
+
+        // 👈 التعديل هنا: إذا لم يتم تمرير IsFit (سواء لعدم وجود صلاحية أو عدم الإرسال)، اجعله false (غير لائق)
+        $data['IsFit'] = $data['IsFit'] ?? false;
 
         $candidate = Candidate::create($data);
 
