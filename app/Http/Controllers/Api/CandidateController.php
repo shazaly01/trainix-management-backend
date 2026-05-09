@@ -63,6 +63,10 @@ class CandidateController extends Controller
             $query->where('IsFit', (bool)$request->IsFit);
         }
 
+        $query->when($request->has('is_withdrawn'), function ($q) use ($request) {
+ $q->where('is_withdrawn', filter_var($request->is_withdrawn, FILTER_VALIDATE_BOOLEAN));
+ });
+
         // فلتر نوع التدريب
         $query->when($request->TrainingType, function ($q, $type) {
             $q->where('TrainingType', $type);
@@ -124,6 +128,10 @@ class CandidateController extends Controller
        if ($request->has('IsFit') && $request->IsFit !== '' && $request->user()?->can('candidate.view_isfit')) {
             $query->where('IsFit', (bool)$request->IsFit);
         }
+
+        $query->when($request->has('is_withdrawn'), function ($q) use ($request) {
+ $q->where('is_withdrawn', filter_var($request->is_withdrawn, FILTER_VALIDATE_BOOLEAN));
+});
 
         // 7. فلتر نوع التدريب
         $query->when($request->TrainingType, function ($q, $type) {

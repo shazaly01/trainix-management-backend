@@ -6,15 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
-use Illuminate\Database\Eloquent\Relations\BelongsTo; // <-- استيراد العلاقة الجديدة
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Candidate extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'job_request_id',    // <-- إضافة حقل الربط
-        'VerificationCode',  // <-- إضافة رقم التحقق
+        'job_request_id',
+        'VerificationCode',
         'SequenceNo',
         'Name',
         'BirthDate',
@@ -29,9 +29,10 @@ class Candidate extends Model
         'IsFit',
         'Notes',
         'BankName',
-    'BankAccountNo',
-    'is_approved',
-    'ShoeSize',
+        'BankAccountNo',
+        'is_approved',
+        'is_withdrawn', // <-- تمت الإضافة
+        'ShoeSize',
     ];
 
     protected $casts = [
@@ -41,6 +42,7 @@ class Candidate extends Model
         'PassportExpiry' => 'date',
         'IsFit' => 'boolean',
         'is_approved' => 'boolean',
+        'is_withdrawn' => 'boolean', // <-- تمت الإضافة
         'ShoeSize' => 'decimal:0',
     ];
 
@@ -79,22 +81,31 @@ class Candidate extends Model
                     ->where('DocumentType', 'Profile Picture');
     }
 
-
     public function attachment(): MorphOne
     {
         return $this->morphOne(Document::class, 'documentable')
                     ->where('DocumentType', 'Applicant File');
     }
 
-
     public function scopeApproved($query)
-{
-    return $query->where('is_approved', true);
-}
+    {
+        return $query->where('is_approved', true);
+    }
 
-// لجلب الطلبات الجديدة (الخارجية) التي لم تُراجع بعد
-public function scopePending($query)
-{
-    return $query->where('is_approved', false);
-}
+    // لجلب الطلبات الجديدة (الخارجية) التي لم تُراجع بعد
+    public function scopePending($query)
+    {
+        return $query->where('is_approved', false);
+    }
+
+    // <-- Scopes الجديدة للانسحاب والانضمام -->
+    public function scopeJoined($query)
+    {
+        return $query->where('is_withdrawn', false);
+    }
+
+    public function scopeWithdrawn($query)
+    {
+        return $query->where('is_withdrawn', true);
+    }
 }

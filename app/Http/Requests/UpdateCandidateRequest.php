@@ -41,9 +41,14 @@ class UpdateCandidateRequest extends FormRequest
             'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],
         ];
 
-        // 👈 التعديل هنا: يتم قبول الحقل فقط إذا كان المستخدم يملك صلاحية التعديل عليه
+        // يتم قبول الحقل فقط إذا كان المستخدم يملك صلاحية التعديل عليه
         if ($this->user() && $this->user()->can('candidate.update_isfit')) {
             $rules['IsFit'] = ['boolean'];
+        }
+
+        // 👈 إضافة حقل حالة الانسحاب بصلاحية مستقلة
+        if ($this->user() && $this->user()->can('candidate.update_is_withdrawn')) {
+            $rules['is_withdrawn'] = ['boolean'];
         }
 
         return $rules;
@@ -55,6 +60,7 @@ class UpdateCandidateRequest extends FormRequest
             'Name' => 'اسم المترشح',
             'NationalNo' => 'الرقم الوطني',
             'image' => 'الصورة الشخصية',
+            'is_withdrawn' => 'حالة الانسحاب', // 👈 تمت الإضافة هنا
         ];
     }
 }

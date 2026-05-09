@@ -35,9 +35,14 @@ class StoreCandidateRequest extends FormRequest
             'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],
         ];
 
-        // 👈 التعديل هنا: نقبل حقل IsFit فقط إذا كان المستخدم يمتلك صلاحية التعديل عليه
+        // نقبل حقل IsFit فقط إذا كان المستخدم يمتلك صلاحية التعديل عليه
         if ($this->user() && $this->user()->can('candidate.update_isfit')) {
             $rules['IsFit'] = ['boolean'];
+        }
+
+        // 👈 التعديل هنا: نقبل حقل is_withdrawn للتحكم بحالة الانسحاب عند الإنشاء (إذا كان يملك الصلاحية)
+        if ($this->user() && $this->user()->can('candidate.update_is_withdrawn')) {
+            $rules['is_withdrawn'] = ['boolean'];
         }
 
         return $rules;
@@ -49,6 +54,7 @@ class StoreCandidateRequest extends FormRequest
             'Name' => 'اسم المترشح',
             'NationalNo' => 'الرقم الوطني',
             'image' => 'الصورة الشخصية',
+            'is_withdrawn' => 'حالة الانسحاب', // <-- تمت الإضافة
         ];
     }
 }
