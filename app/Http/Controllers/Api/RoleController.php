@@ -113,6 +113,10 @@ class RoleController extends Controller
         'download' => 'تحميل',
         'view_isfit' => 'عرض حالة اللياقة',
         'update_isfit' => 'تعديل حالة اللياقة',
+        'view_is_withdrawn' => 'عرض حالة الانضمام',
+        'update_is_withdrawn' => 'تعديل حالة الانضمام',
+        'view_is_absent' => 'عرض حالة التواجد',
+        'update_is_absent' => 'تعديل حالة التواجد',
     ];
 
     // 2. جلب كل الصلاحيات وتجميعها حسب المجموعة (ما قبل النقطة)

@@ -48,10 +48,10 @@ class CandidateResource extends JsonResource
             'is_approved' => $this->is_approved,
 
             // 👈 إضافة حالة الانسحاب (false = منضم، true = منسحب)
-            'is_withdrawn' => $this->is_withdrawn,
+            'is_withdrawn' => $this->when($request->user() && $request->user()->can('candidate.view_is_withdrawn'), $this->is_withdrawn),
 
             // إضافة حالة الغياب (false = حاضر، true = متغيب)
-            'is_absent' => $this->is_absent,
+            'is_absent' => $this->when($request->user() && $request->user()->can('candidate.view_is_absent'), $this->is_absent),
 
             // استدعاء ملف الـ Resource الخاص بالمرفقات لجلب بيانات ورابط الصورة الشخصية
             'image_url' => $this->image ? \Illuminate\Support\Facades\URL::signedRoute('documents.download', $this->image->id) : null,

@@ -77,6 +77,14 @@ class CandidateController extends Controller
             $q->where('TrainingType', $type);
         });
 
+          $query->when($request->birth_year_from, function ($q, $yearFrom) {
+            $q->whereYear('BirthDate', '>=', $yearFrom);
+        });
+
+        $query->when($request->birth_year_to, function ($q, $yearTo) {
+            $q->whereYear('BirthDate', '<=', $yearTo);
+        });
+
         // الترتيب والجلب
         $perPage = $request->get('per_page', 15);
 
@@ -141,6 +149,14 @@ class CandidateController extends Controller
         // 7. فلتر نوع التدريب
         $query->when($request->TrainingType, function ($q, $type) {
             $q->where('TrainingType', $type);
+        });
+
+        $query->when($request->birth_year_from, function ($q, $yearFrom) {
+            $q->whereYear('BirthDate', '>=', $yearFrom);
+        });
+
+        $query->when($request->birth_year_to, function ($q, $yearTo) {
+            $q->whereYear('BirthDate', '<=', $yearTo);
         });
 
         $candidates = $query->latest()->paginate($request->get('per_page', 15));

@@ -29,6 +29,9 @@ class PermissionSeeder extends Seeder
             // ---> إضافة صلاحيات حقل اللياقة هنا <---
             'candidate.view_isfit', 'candidate.update_isfit',
 
+            'candidate.view_is_withdrawn', 'candidate.update_is_withdrawn',
+            'candidate.view_is_absent', 'candidate.update_is_absent',
+
             // ج. المستندات (Documents)
             'document.view', 'document.create', 'document.update', 'document.delete',
 
