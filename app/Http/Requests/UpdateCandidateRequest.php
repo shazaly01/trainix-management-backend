@@ -38,6 +38,7 @@ class UpdateCandidateRequest extends FormRequest
             'BankName' => ['nullable', 'string', 'max:255'],
             'BankAccountNo' => ['nullable', 'string', 'max:50'],
             'ShoeSize' => ['nullable', 'numeric'],
+            'is_absent' => ['nullable', 'boolean'],
             'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],
         ];
 
@@ -61,6 +62,7 @@ class UpdateCandidateRequest extends FormRequest
             'NationalNo' => 'الرقم الوطني',
             'image' => 'الصورة الشخصية',
             'is_withdrawn' => 'حالة الانسحاب', // 👈 تمت الإضافة هنا
+            'is_absent' => 'حالة الغياب',
         ];
     }
 }

@@ -32,6 +32,7 @@ class Candidate extends Model
         'BankAccountNo',
         'is_approved',
         'is_withdrawn', // <-- تمت الإضافة
+        'is_absent',
         'ShoeSize',
     ];
 
@@ -43,6 +44,7 @@ class Candidate extends Model
         'IsFit' => 'boolean',
         'is_approved' => 'boolean',
         'is_withdrawn' => 'boolean', // <-- تمت الإضافة
+        'is_absent' => 'boolean',
         'ShoeSize' => 'decimal:0',
     ];
 
@@ -107,5 +109,18 @@ class Candidate extends Model
     public function scopeWithdrawn($query)
     {
         return $query->where('is_withdrawn', true);
+    }
+
+
+
+    // <-- Scopes الحضور والغياب -->
+    public function scopePresent($query)
+    {
+        return $query->where('is_absent', false);
+    }
+
+    public function scopeAbsent($query)
+    {
+        return $query->where('is_absent', true);
     }
 }

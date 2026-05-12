@@ -50,6 +50,9 @@ class CandidateResource extends JsonResource
             // 👈 إضافة حالة الانسحاب (false = منضم، true = منسحب)
             'is_withdrawn' => $this->is_withdrawn,
 
+            // إضافة حالة الغياب (false = حاضر، true = متغيب)
+            'is_absent' => $this->is_absent,
+
             // استدعاء ملف الـ Resource الخاص بالمرفقات لجلب بيانات ورابط الصورة الشخصية
             'image_url' => $this->image ? \Illuminate\Support\Facades\URL::signedRoute('documents.download', $this->image->id) : null,
 

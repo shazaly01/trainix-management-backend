@@ -64,8 +64,13 @@ class CandidateController extends Controller
         }
 
         $query->when($request->has('is_withdrawn'), function ($q) use ($request) {
- $q->where('is_withdrawn', filter_var($request->is_withdrawn, FILTER_VALIDATE_BOOLEAN));
- });
+        $q->where('is_withdrawn', filter_var($request->is_withdrawn, FILTER_VALIDATE_BOOLEAN));
+        });
+
+        // فلتر حالة الغياب والحضور
+        $query->when($request->has('is_absent'), function ($q) use ($request) {
+        $q->where('is_absent', filter_var($request->is_absent, FILTER_VALIDATE_BOOLEAN));
+        });
 
         // فلتر نوع التدريب
         $query->when($request->TrainingType, function ($q, $type) {

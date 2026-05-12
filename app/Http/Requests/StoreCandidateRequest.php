@@ -30,6 +30,7 @@ class StoreCandidateRequest extends FormRequest
             'BankName' => ['nullable', 'string', 'max:255'],
             'BankAccountNo' => ['nullable', 'string', 'max:50'],
             'ShoeSize' => ['nullable', 'numeric'],
+            'is_absent' => ['nullable', 'boolean'],
 
             // التحقق من الصورة المرفقة (اختيارية، ويجب أن تكون صورة بحجم أقصى 5 ميجا)
             'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],
@@ -55,6 +56,7 @@ class StoreCandidateRequest extends FormRequest
             'NationalNo' => 'الرقم الوطني',
             'image' => 'الصورة الشخصية',
             'is_withdrawn' => 'حالة الانسحاب', // <-- تمت الإضافة
+            'is_absent' => 'حالة الغياب',
         ];
     }
 }
